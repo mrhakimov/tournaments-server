@@ -10,13 +10,15 @@ import java.util.List;
 @Table(name = "tournament")
 public class Tournament {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Integer maxParticipants;
     private Integer matchesNumber;
     private boolean onHold = true;
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "id", targetEntity = Participant.class)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "tournament")
     private List<Participant> participants;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "tournament")
+    private List<Match> matches;
 
     public Long getId() {
         return id;
@@ -56,5 +58,13 @@ public class Tournament {
 
     public void setParticipants(List<Participant> participants) {
         this.participants = participants;
+    }
+
+    public List<Match> getMatches() {
+        return matches;
+    }
+
+    public void setMatches(List<Match> matches) {
+        this.matches = matches;
     }
 }

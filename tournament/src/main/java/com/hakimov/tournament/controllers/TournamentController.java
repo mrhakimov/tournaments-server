@@ -4,104 +4,96 @@ import com.hakimov.tournament.Utils;
 import com.hakimov.tournament.model.Participant;
 import com.hakimov.tournament.model.Tournament;
 import com.hakimov.tournament.repositories.MatchRepository;
-import com.hakimov.tournament.repositories.ParticipantRepository;
 import com.hakimov.tournament.repositories.TournamentRepository;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import javassist.NotFoundException;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/api")
 public class TournamentController {
     private final TournamentRepository tournamentRepository;
     private final MatchRepository matchRepository;
-    private final ParticipantRepository participantRepository;
 
-    TournamentController(TournamentRepository tournamentRepository, MatchRepository matchRepository, ParticipantRepository participantRepository) {
+    public TournamentController(TournamentRepository tournamentRepository, MatchRepository matchRepository) {
         this.tournamentRepository = tournamentRepository;
         this.matchRepository = matchRepository;
-        this.participantRepository = participantRepository;
     }
 
-    @PostMapping("/create")
-    public void create(Integer matchesNumber, Integer maxParticipants) {
-        Tournament tournament = new Tournament();
-        tournament.setMatchesNumber(matchesNumber);
-        tournament.setMaxParticipants(maxParticipants);
-        tournamentRepository.save(tournament);
+    @GetMapping("/tournaments/{id}")
+    public Tournament get(@PathVariable Long id) throws NotFoundException {
+        Optional<Tournament> tournamentOptional = tournamentRepository.findById(id);
+
+        return tournamentOptional.orElseThrow(() -> new NotFoundException(Utils.tournamentNotFoundMessage(id)));
     }
 
-    @PostMapping("/get")
-    public Tournament get(Long id) {
-        Optional<Tournament> result = tournamentRepository.findById(id);
-        return result.orElse(null);
+    @PostMapping("/tournaments")
+    public Tournament create(@RequestBody Tournament tournament) {
+        return tournamentRepository.save(tournament);
     }
 
-    @PostMapping("/add")
-    public void add(Long tournamentId, Long participantId, String participantNickname) {
-        Participant participant = new Participant();
-        participant.setId(participantId);
-        participant.setNickname(participantNickname);
-
-        participantRepository.save(participant);
-
-        Tournament tournament = get(tournamentId);
-        tournament.getParticipants().add(participant);
-    }
-
-    @PostMapping("/remove")
-    public boolean remove(Long tournamentId, Long participantId) {
-        Tournament tournament = get(tournamentId);
-
-        if (tournament == null || tournament.isOnHold()) {
-            return false;
+    @PutMapping("/tournaments/{id}/start")
+    public String start(@PathVariable Long id) throws NotFoundException {
+        if (!tournamentRepository.existsById(id)) {
+            throw new NotFoundException(Utils.tournamentNotFoundMessage(id));
         }
 
-        int indexToRemove = -1;
-        for (int i = 0; i < tournament.getParticipants().size(); ++i) {
-            Participant participant = tournament.getParticipants().get(i);
-            if (participant.getId().equals(participantId)) {
-                indexToRemove = i;
-                break;
-            }
-        }
+        return tournamentRepository.findById(id)
+                .map(tournament -> {
+                    tournament.setOnHold(false);
+                    List<Participant> participants = tournament.getParticipants();
+                    Collections.shuffle(participants);
+                    Utils.matchParticipants(tournament, matchRepository, participants);
 
-        if (indexToRemove == -1) {
-            return false;
-        }
-
-        tournament.getParticipants().remove(indexToRemove);
-
-        return true;
+                    return "Tournament started successfully!";
+                }).orElseThrow(() -> new NotFoundException("Participant not found!"));
     }
 
-    @PostMapping("/start")
-    public boolean start(Long tournamentId) {
-        Tournament tournament = get(tournamentId);
-
-        if (tournament == null) {
-            return false;
+    @PutMapping("/tournaments/{id}/hold")
+    public String hold(@PathVariable Long id) throws NotFoundException {
+        if (!tournamentRepository.existsById(id)) {
+            throw new NotFoundException(Utils.tournamentNotFoundMessage(id));
         }
 
-        tournament.setOnHold(false);
-        List<Participant> participants = tournament.getParticipants();
-        Collections.shuffle(participants);
-        Utils.matchParticipants(tournament, matchRepository, participants);
+        return tournamentRepository.findById(id)
+                .map(tournament -> {
+                    tournament.setOnHold(true);
 
-        return true;
+                    return "Tournament is now on hold!";
+                }).orElseThrow(() -> new NotFoundException(Utils.tournamentNotFoundMessage(id)));
     }
 
-    @PostMapping("/hold")
-    public boolean hold(Long tournamentId) {
-        Tournament tournament = get(tournamentId);
-
-        if (tournament == null) {
-            return false;
+    @PutMapping("/tournaments/{id}")
+    public Tournament update(@PathVariable Long id, @RequestBody Tournament tournamentUpdated) throws NotFoundException {
+        if (!tournamentRepository.existsById(id)) {
+            throw new NotFoundException(Utils.tournamentNotFoundMessage(id));
         }
 
-        tournament.setOnHold(true);
-        return true;
+        return tournamentRepository.findById(id)
+                .map(tournament -> {
+                    tournament.setMaxParticipants(tournamentUpdated.getMaxParticipants());
+                    tournament.setMatchesNumber(tournamentUpdated.getMatchesNumber());
+                    tournament.setOnHold(tournamentUpdated.isOnHold());
+                    tournament.setParticipants(tournamentUpdated.getParticipants());
+
+                    return tournamentRepository.save(tournament);
+                }).orElseThrow(() -> new NotFoundException(Utils.tournamentNotFoundMessage(id)));
+    }
+
+    @DeleteMapping("/tournaments/{id}")
+    public String remove(@PathVariable Long id) throws NotFoundException {
+        if (!tournamentRepository.existsById(id)) {
+            throw new NotFoundException(Utils.tournamentNotFoundMessage(id));
+        }
+
+        return tournamentRepository.findById(id)
+                .map(tournament -> {
+                    tournamentRepository.delete(tournament);
+
+                    return "Tournament deleted successfully!";
+                }).orElseThrow(() -> new NotFoundException(Utils.tournamentNotFoundMessage(id)));
     }
 }

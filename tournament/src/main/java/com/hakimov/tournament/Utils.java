@@ -12,6 +12,18 @@ import java.util.List;
 public class Utils {
     private static Integer totalMatches;
     private static Integer matchesPlayed;
+    
+    public static String tournamentNotFoundMessage(Long id) {
+        return "Can't find tournament with id: " + id + "!";
+    }
+
+    public static String participantNotFoundMessage() {
+        return "Can't find participant!";
+    }
+
+    public static String matchNotFoundMessage(Long id) {
+        return "Can't find match with id: " + id + "!";
+    }
 
     public static void matchParticipants(Tournament tournament,
                                          MatchRepository matchRepository,

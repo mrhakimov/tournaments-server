@@ -11,15 +11,16 @@ import java.util.List;
 @Table(name = "match")
 public class Match {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "id", targetEntity = Participant.class)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "match")
     private List<Participant> participants;
     private LocalDateTime startTime;
     private LocalDateTime finishTime;
     private Long firstParticipantScore;
     private Long secondParticipantScore;
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, targetEntity = Tournament.class)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "tournament_id")
     private Tournament tournament;
 
     public Long getId() {
