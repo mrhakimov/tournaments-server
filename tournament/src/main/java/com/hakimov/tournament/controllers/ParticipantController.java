@@ -1,6 +1,6 @@
 package com.hakimov.tournament.controllers;
 
-import com.hakimov.tournament.Utils;
+import com.hakimov.tournament.util.Utils;
 import com.hakimov.tournament.model.Match;
 import com.hakimov.tournament.model.Participant;
 import com.hakimov.tournament.model.Tournament;
@@ -9,10 +9,14 @@ import com.hakimov.tournament.repositories.TournamentRepository;
 import javassist.NotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.SizeLimitExceededException;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * @author Muhammadjon Hakimov (github.com/MrHakimov)
+ *
+ * Controller, which provides methods to get, add, update and delete tournaments' participants.
+ */
 @RestController
 @RequestMapping("/api")
 public class ParticipantController {
@@ -24,6 +28,12 @@ public class ParticipantController {
         this.tournamentRepository = tournamentRepository;
     }
 
+    /**
+     * Gets list of participants of tournament, provided by it's id.
+     * @param tournamentId - id of tournament.
+     * @return list of participants.
+     * @throws NotFoundException if there is no tournament with provided id.
+     */
     @GetMapping("/tournaments/{tournamentId}/participants")
     public List<Participant> get(@PathVariable Long tournamentId) throws NotFoundException {
         if (!tournamentRepository.existsById(tournamentId)) {
@@ -33,7 +43,15 @@ public class ParticipantController {
         return participantRepository.findByTournamentId(tournamentId);
     }
 
-	@PostMapping("/tournaments/{tournamentId}/participants")
+    /**
+     * Creates new participant for tournament provided by id.
+     *
+     * @param tournamentId - id of tournament.
+     * @param participant - participant to add to tournament.
+     * @return created participant.
+     * @throws NotFoundException if there is no tournament with provided id.
+     */
+    @PostMapping("/tournaments/{tournamentId}/participants")
     public Participant add(@PathVariable Long tournamentId, @RequestBody Participant participant) throws NotFoundException {
         return tournamentRepository.findById(tournamentId)
                 .map(tournament -> {
@@ -50,6 +68,15 @@ public class ParticipantController {
                 }).orElseThrow(() -> new NotFoundException(Utils.tournamentNotFoundMessage(tournamentId)));
     }
 
+    /**
+     * Additional method to update participants of tournament provided by id.
+     *
+     * @param tournamentId - id of tournament.
+     * @param participantId - id of participant to update.
+     * @param participantUpdated - updated participant.
+     * @return updated participant.
+     * @throws NotFoundException if there is no tournament or participant with provided ids.
+     */
     @PutMapping("/tournaments/{tournamentId}/participants/{participantId}")
     public Participant update(@PathVariable Long tournamentId, @PathVariable Long participantId, @RequestBody Participant participantUpdated) throws NotFoundException {
     	if (!tournamentRepository.existsById(tournamentId)) {
@@ -66,6 +93,14 @@ public class ParticipantController {
                 }).orElseThrow(() -> new NotFoundException(Utils.participantNotFoundMessage()));
     }
 
+    /**
+     * Deletes provided participant from tournament.
+     *
+     * @param tournamentId - id of tournament.
+     * @param participantId - id of participant to delete.
+     * @return status message.
+     * @throws NotFoundException if there is no tournament or participant with provided ids.
+     */
     @DeleteMapping("/tournaments/{tournamentId}/participants/{participantId}")
     public String remove(@PathVariable Long tournamentId, @PathVariable Long participantId) throws NotFoundException {
     	if (!tournamentRepository.existsById(tournamentId)) {

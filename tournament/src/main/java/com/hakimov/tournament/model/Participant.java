@@ -48,10 +48,6 @@ public class Participant {
         return active;
     }
 
-    public boolean isNotActive() {
-        return !active;
-    }
-
     public void setActive(boolean active) {
         this.active = active;
     }

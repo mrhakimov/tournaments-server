@@ -25,6 +25,11 @@ public class Match {
     private Long secondParticipantScore;
 
     @JsonIgnore
+    private Long firstParticipantId;
+    @JsonIgnore
+    private Long secondParticipantId;
+
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "tournament_id")
     private Tournament tournament;
@@ -83,5 +88,21 @@ public class Match {
 
     public void setTournament(Tournament tournament) {
         this.tournament = tournament;
+    }
+
+    public Long getFirstParticipantId() {
+        return firstParticipantId;
+    }
+
+    public void setFirstParticipantId(Long firstParticipantId) {
+        this.firstParticipantId = firstParticipantId;
+    }
+
+    public Long getSecondParticipantId() {
+        return secondParticipantId;
+    }
+
+    public void setSecondParticipantId(Long secondParticipantId) {
+        this.secondParticipantId = secondParticipantId;
     }
 }
