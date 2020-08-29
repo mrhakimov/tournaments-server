@@ -4,6 +4,7 @@ import com.hakimov.tournament.model.Match;
 import com.hakimov.tournament.model.Participant;
 import com.hakimov.tournament.model.Tournament;
 import com.hakimov.tournament.repositories.MatchRepository;
+import com.hakimov.tournament.repositories.ParticipantRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.List;
 
 public class Utils {
     private static Integer totalMatches;
-    private static Integer matchesPlayed;
+    private static Integer matchesPlayed = 0;
     
     public static String tournamentNotFoundMessage(Long id) {
         return "Can't find tournament with id: " + id + "!";
@@ -27,9 +28,12 @@ public class Utils {
 
     public static void matchParticipants(Tournament tournament,
                                          MatchRepository matchRepository,
-                                         List<Participant> participants) {
+                                         List<Participant> participants,
+                                         ParticipantRepository participantRepository) {
         int i = 0;
         int totalParticipants = participants.size();
+        System.out.println("================");
+        System.out.println(totalParticipants);
         while (i < totalParticipants) {
             while (i < totalParticipants && participants.get(i).isNotActive()) {
                 ++i;
@@ -39,7 +43,7 @@ public class Utils {
                 break;
             }
 
-            int firstParticipant = i++;
+            int firstParticipantIndex = i++;
 
             while (i < totalParticipants && participants.get(i).isNotActive()) {
                 ++i;
@@ -49,21 +53,50 @@ public class Utils {
                 break;
             }
 
-            int secondParticipant = i;
+            int secondParticipantIndex = i++;
 
-            Match match = new Match();
+            Participant firstParticipant = participants.get(firstParticipantIndex);
+            Participant secondParticipant = participants.get(secondParticipantIndex);
+
+            System.out.println("" + firstParticipantIndex + ", " + secondParticipantIndex + " => "
+            + firstParticipant.getNickname() + ", " + secondParticipant.getNickname());
+
+            Match match = firstParticipant.getMatch();
+            Match matchToDelete = secondParticipant.getMatch();
+
+            secondParticipant.setMatch(match);
+
+//            if (matchToDelete != null) {
+//                matchRepository.delete(matchToDelete);
+//            }
+
             match.setStartTime(LocalDateTime.now());
 
             List<Participant> matchesParticipants = new ArrayList<>();
-            matchesParticipants.add(participants.get(firstParticipant));
-            matchesParticipants.add(participants.get(secondParticipant));
+            matchesParticipants.add(firstParticipant);
+            matchesParticipants.add(secondParticipant);
             match.setParticipants(matchesParticipants);
             match.setTournament(tournament);
 
             matchRepository.save(match);
+
+            firstParticipant.setMatch(match);
+            secondParticipant.setMatch(match);
+
+            participantRepository.save(firstParticipant);
+            participantRepository.save(secondParticipant);
+
+            System.out.println("DONE ---------------------------");
         }
 
-        Utils.setTotalMatches(totalParticipants / 2 + (totalParticipants / 2 % 2) * (totalParticipants % 2));
+        int activeParticipants = 0;
+        for (int j = 0; j < participants.size(); ++j) {
+            if (participants.get(j).isActive()) {
+                activeParticipants += 1;
+            }
+        }
+
+        Utils.setTotalMatches(activeParticipants / 2);
     }
 
     public static Integer getTotalMatches() {

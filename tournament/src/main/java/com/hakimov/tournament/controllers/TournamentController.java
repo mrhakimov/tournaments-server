@@ -4,6 +4,7 @@ import com.hakimov.tournament.Utils;
 import com.hakimov.tournament.model.Participant;
 import com.hakimov.tournament.model.Tournament;
 import com.hakimov.tournament.repositories.MatchRepository;
+import com.hakimov.tournament.repositories.ParticipantRepository;
 import com.hakimov.tournament.repositories.TournamentRepository;
 import javassist.NotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +18,12 @@ import java.util.Optional;
 public class TournamentController {
     private final TournamentRepository tournamentRepository;
     private final MatchRepository matchRepository;
+    private final ParticipantRepository participantRepository;
 
-    public TournamentController(TournamentRepository tournamentRepository, MatchRepository matchRepository) {
+    public TournamentController(TournamentRepository tournamentRepository, MatchRepository matchRepository, ParticipantRepository participantRepository) {
         this.tournamentRepository = tournamentRepository;
         this.matchRepository = matchRepository;
+        this.participantRepository = participantRepository;
     }
 
     @GetMapping("/tournaments/{id}")
@@ -31,7 +34,11 @@ public class TournamentController {
     }
 
     @PostMapping("/tournaments")
-    public Tournament create(@RequestBody Tournament tournament) {
+    public Tournament create(@RequestBody Tournament tournament)  throws IllegalArgumentException {
+        if (tournament.getMaxParticipants() == null || tournament.getMaxParticipants() % 8 != 0) {
+            throw new IllegalArgumentException("Max number of participants should be multiple of 8!");
+        }
+
         return tournamentRepository.save(tournament);
     }
 
@@ -46,9 +53,17 @@ public class TournamentController {
                     tournament.setOnHold(false);
                     List<Participant> participants = tournament.getParticipants();
                     Collections.shuffle(participants);
-                    Utils.matchParticipants(tournament, matchRepository, participants);
 
-                    return "Tournament started successfully!";
+                    String tmp = "";
+                    for (Participant participant : participants) {
+                        tmp += participant.getNickname() + "\n";
+                    }
+
+                    System.out.println(tmp);
+
+                    Utils.matchParticipants(tournament, matchRepository, participants, participantRepository);
+
+                    return "Tournament started successfully!\n" + tmp;
                 }).orElseThrow(() -> new NotFoundException("Participant not found!"));
     }
 

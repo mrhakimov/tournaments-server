@@ -1,5 +1,6 @@
 package com.hakimov.tournament.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -13,12 +14,17 @@ public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "match")
     private List<Participant> participants;
+
     private LocalDateTime startTime;
     private LocalDateTime finishTime;
+
     private Long firstParticipantScore;
     private Long secondParticipantScore;
+
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "tournament_id")
     private Tournament tournament;

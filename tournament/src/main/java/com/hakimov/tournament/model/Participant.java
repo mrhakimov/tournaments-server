@@ -14,11 +14,15 @@ public class Participant {
     @Id
     private Long id;
     private String nickname;
+
+    @JsonIgnore
     private boolean active;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL)
     @JoinColumn(name = "match_id", nullable = false)
     @JsonIgnore
     private Match match;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tournament_id", nullable = false)
     @JsonIgnore
