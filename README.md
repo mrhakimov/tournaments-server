@@ -1,4 +1,4 @@
-# tournament
+# tournaments-server
 A web service (HTTP REST API) to organize tournaments.
 
 ### Summary
