@@ -27,7 +27,7 @@ public class Participant {
     @JoinColumn(name = "tournament_id", nullable = false)
     @JsonIgnore
     private Tournament tournament;
-
+    
     public Long getId() {
         return id;
     }
