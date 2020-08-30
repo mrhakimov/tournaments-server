@@ -15,7 +15,8 @@ Also some additional methods provided to hold, update and delete tournaments, to
 1. Tests. I should cover more cases.
 2. API Design? Maybe idea with `/tournaments/start/{tournamentId}` is not that good.
 3. Validators.
-4. Screenshots :)
+4. Commits. I was planning to create another repo for this project. Firstly, this one was created just for test of something, doesn't matter.
+5. Screenshots :)
 (Telegram zipped them)
 
 ### Screenshots
